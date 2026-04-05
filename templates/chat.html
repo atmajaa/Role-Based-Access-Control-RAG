@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ask a Question</title>
+    <style>
+        * { box-sizing: border-box; font-family: Arial, sans-serif; margin: 0; padding: 0; }
+        body { background: #f4f7f6; display: flex; flex-direction: column; align-items: center; padding: 40px 20px; }
+        .card { background: white; padding: 32px; border-radius: 10px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); width: 100%; max-width: 600px; }
+        h2 { color: #333; margin-bottom: 8px; }
+        p.sub { color: #999; font-size: 14px; margin-bottom: 24px; }
+        textarea { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 15px; resize: vertical; min-height: 80px; }
+        button { margin-top: 12px; width: 100%; padding: 12px; background: #007bff; color: white; border: none; border-radius: 6px; font-size: 15px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        button:disabled { background: #aaa; cursor: not-allowed; }
+        .answer-box { margin-top: 24px; padding: 16px; background: #f8f9fa; border-left: 4px solid #007bff; border-radius: 4px; font-size: 15px; color: #333; line-height: 1.6; display: none; }
+        .navbar { width: 100%; max-width: 600px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+        .navbar span { font-size: 14px; color: #666; }
+        .navbar a { font-size: 14px; color: #007bff; text-decoration: none; }
+    </style>
+</head>
+<body>
+
+<div class="navbar">
+    <strong>RAG Assistant</strong>
+    <span>{{ username }} · {{ department }}</span>
+    <a href="/login">Logout</a>
+</div>
+
+<div class="card">
+    <h2>Ask a Question</h2>
+    <p class="sub">You can only access documents from your department.</p>
+
+    <textarea id="query-input" placeholder="Type your question here..."></textarea>
+    <button id="send-btn" onclick="askQuestion()">Ask</button>
+
+    <div class="answer-box" id="answer-box"></div>
+</div>
+
+<script>
+    async function askQuestion() {
+        const input = document.getElementById("query-input");
+        const btn = document.getElementById("send-btn");
+        const answerBox = document.getElementById("answer-box");
+
+        const query = input.value.trim();
+        if (!query) return;
+
+        btn.disabled = true;
+        btn.innerText = "Thinking...";
+        answerBox.style.display = "none";
+
+        const formData = new FormData();
+        formData.append("query", query);
+
+        try {
+            const response = await fetch("/ask", { method: "POST", body: formData });
+            const data = await response.json();
+            answerBox.innerText = data.answer;
+            answerBox.style.display = "block";
+        } catch (error) {
+            answerBox.innerText = "Something went wrong. Please try again.";
+            answerBox.style.display = "block";
+        }
+
+        btn.disabled = false;
+        btn.innerText = "Ask";
+    }
+
+    document.getElementById("query-input").addEventListener("keydown", function(e) {
+        if (e.key === "Enter" && !e.shiftKey) {
+            e.preventDefault();
+            askQuestion();
+        }
+    });
+</script>
+
+</body>
+</html>
